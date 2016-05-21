@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		7802C4A61CE94013002D4F16 /* TriDenALU.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7802C4A51CE94013002D4F16 /* TriDenALU.swift */; };
+		78BC81D91CF0D88600A9F78D /* Den.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78BC81D81CF0D88600A9F78D /* Den.swift */; };
+		78BC81DB1CF0D8C200A9F78D /* TriDen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78BC81DA1CF0D8C200A9F78D /* TriDen.swift */; };
+		78BC81DD1CF0EA2500A9F78D /* TriDenALUController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78BC81DC1CF0EA2500A9F78D /* TriDenALUController.swift */; };
 		78F9624F1CE649B60041F59B /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78F9624E1CE649B60041F59B /* main.swift */; };
 /* End PBXBuildFile section */
 
@@ -25,6 +28,9 @@
 
 /* Begin PBXFileReference section */
 		7802C4A51CE94013002D4F16 /* TriDenALU.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TriDenALU.swift; sourceTree = "<group>"; };
+		78BC81D81CF0D88600A9F78D /* Den.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Den.swift; sourceTree = "<group>"; };
+		78BC81DA1CF0D8C200A9F78D /* TriDen.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TriDen.swift; sourceTree = "<group>"; };
+		78BC81DC1CF0EA2500A9F78D /* TriDenALUController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TriDenALUController.swift; sourceTree = "<group>"; };
 		78F9624B1CE649B60041F59B /* coding_challenge_3 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = coding_challenge_3; sourceTree = BUILT_PRODUCTS_DIR; };
 		78F9624E1CE649B60041F59B /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -61,6 +67,9 @@
 			children = (
 				78F9624E1CE649B60041F59B /* main.swift */,
 				7802C4A51CE94013002D4F16 /* TriDenALU.swift */,
+				78BC81D81CF0D88600A9F78D /* Den.swift */,
+				78BC81DA1CF0D8C200A9F78D /* TriDen.swift */,
+				78BC81DC1CF0EA2500A9F78D /* TriDenALUController.swift */,
 			);
 			path = coding_challenge_3;
 			sourceTree = "<group>";
@@ -123,7 +132,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				7802C4A61CE94013002D4F16 /* TriDenALU.swift in Sources */,
+				78BC81DD1CF0EA2500A9F78D /* TriDenALUController.swift in Sources */,
+				78BC81DB1CF0D8C200A9F78D /* TriDen.swift in Sources */,
 				78F9624F1CE649B60041F59B /* main.swift in Sources */,
+				78BC81D91CF0D88600A9F78D /* Den.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

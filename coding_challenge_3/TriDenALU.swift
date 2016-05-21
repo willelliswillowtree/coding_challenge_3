@@ -9,27 +9,13 @@
 import Foundation
 
 protocol TriDenALUDelegate: class {
-    func didHalt()
     func getValueFromRAMAtAddress(ramAddress:TriDen) -> TriDen
     func writeValue(value:TriDen, toRAMAtAddress ramAddress:TriDen)
     func goTo(instructionInRAMAtAddress ramAddress:TriDen)
 }
 
-struct Den: Equatable {
-    let rawValue:Int
-    
-    init() {
-        rawValue = 0
-    }
-    
-    init(_ rawValue:Int) {
-        assert(0...9 ~= rawValue, "Invalid Den value")
-        self.rawValue = rawValue
-    }
-}
-func ==(left:Den, right:Den) -> Bool { return left.rawValue == right.rawValue }
 
-enum CommandType: Int {
+enum CommandType: Den {
     case GoTo = 0
     case Halt
     case Set
@@ -40,129 +26,102 @@ enum CommandType: Int {
     case MultiplyWithReg
     case SetRegWithRAM
     case WriteRegToRAM
-    
-    init?(den:Den) {
-        self.init(rawValue:den.rawValue)
-    }
 }
 
-struct TriDen: Equatable {
-    static let maxTriDen = 1000
-    let rawValue:Int
-    init() {
-        rawValue = 0
-    }
-    
-    init(_ rawValue:Int) {
-        assert(0..<TriDen.maxTriDen ~= rawValue, "Invalid Den value")
-        self.rawValue = rawValue
-    }
-    
-    init(_ value:Den) {
-        self.init(value.rawValue)
-    }
-    
-    init(_ left:Den, _ center:Den, _ right:Den) {
-        rawValue = left.rawValue * 100 + center.rawValue * 10 + right.rawValue
-    }
-    
-    func dens() -> (left:Den, center:Den, right:Den) {
-        return (Den(rawValue/100), Den((rawValue/10)%10), Den(rawValue%10))
-    }
-}
-func ==(left:TriDen, right:TriDen) -> Bool { return left.rawValue == right.rawValue }
-func +(left:TriDen, right:TriDen) -> TriDen { return TriDen((left.rawValue + right.rawValue) % TriDen.maxTriDen) }
-func *(left:TriDen, right:TriDen) -> TriDen { return TriDen((left.rawValue * right.rawValue) % TriDen.maxTriDen) }
 
-extension Array {
-    subscript(index:Den) -> Element {
-        get {
-            return self[index.rawValue]
-        }
-        set(newElm) {
-            self.insert(newElm, atIndex: index.rawValue)
-        }
-    }
+enum TriDenALUReturnType: TriDen {
+    case Ok = 0
+    case GoTo
+    case Halt
 }
+
 
 class TriDenALU {
     
     var registers:[TriDen] = Array(count: 10, repeatedValue: TriDen())
-    private weak var delegate:TriDenALUDelegate!
-    
-    init(delegate:TriDenALUDelegate) {
-        self.delegate = delegate
-    }
-    
-    func execute(instruction:TriDen) {
+    weak var delegate:TriDenALUDelegate!
+        
+    func execute(instruction:TriDen) -> TriDenALUReturnType {
         let (commandDen, leftDen, rightDen) = instruction.dens()
-        guard let command = CommandType(den: commandDen) else { assert(false, "Could not convert Den to CommandType") }
+        guard let command = CommandType(rawValue: commandDen) else { assert(false, "Could not convert Den to CommandType") }
         switch command {
         case .GoTo:
-            goTo(instructionInRAMWithAddressAtRegister: leftDen, unlessNonzeroValueAtRegister: rightDen)
+            return goTo(instructionInRAMWithAddressAtRegister: leftDen, unlessNonzeroValueAtRegister: rightDen)
         case .Halt:
-            halt(leftDen, rightDen)
+            return halt(leftDen, rightDen)
         case .Set:
-            set(valueAtRegister: leftDen, withValue: rightDen)
+            return set(valueAtRegister: leftDen, withValue: rightDen)
         case .Sum:
-            sumAndSet(valueAtRegister: leftDen, withValue: rightDen)
+            return sumAndSet(valueAtRegister: leftDen, withValue: rightDen)
         case .Multiply:
-            multiplyAndSet(valueAtRegister: leftDen, withValue: rightDen)
+            return multiplyAndSet(valueAtRegister: leftDen, withValue: rightDen)
         case .SetWithReg:
-            set(valueAtDestinationRegister: leftDen, withValueAtSourceRegister: rightDen)
+            return set(valueAtDestinationRegister: leftDen, withValueAtSourceRegister: rightDen)
         case .SumWithReg:
-            sumAndSet(valueAtDestinationRegister: leftDen, withValueAtSourceRegister: rightDen)
+            return sumAndSet(valueAtDestinationRegister: leftDen, withValueAtSourceRegister: rightDen)
         case .MultiplyWithReg:
-            multiplyAndSet(valueAtDestinationRegister: leftDen, withValueAtSourceRegister: rightDen)
+            return multiplyAndSet(valueAtDestinationRegister: leftDen, withValueAtSourceRegister: rightDen)
         case .SetRegWithRAM:
-            set(valueAtDestinationRegister: leftDen, withValueInRAMWithAddressAtRegister: rightDen)
+            return set(valueAtDestinationRegister: leftDen, withValueInRAMWithAddressAtRegister: rightDen)
         case .WriteRegToRAM:
-            write(valueAtSourceRegister: leftDen, toValueInRAMWithAddressAtRegister: rightDen)
+            return write(valueAtSourceRegister: leftDen, toValueInRAMWithAddressAtRegister: rightDen)
         }
     }
     
     
-    func goTo(instructionInRAMWithAddressAtRegister destRAMAddressRegIdx:Den, unlessNonzeroValueAtRegister testRegIdx:Den) {
+    func goTo(instructionInRAMWithAddressAtRegister destRAMAddressRegIdx:Den, unlessNonzeroValueAtRegister testRegIdx:Den) -> TriDenALUReturnType {
         if registers[testRegIdx] != TriDen(0) {
             delegate.goTo(instructionInRAMAtAddress: registers[destRAMAddressRegIdx])
+            return .GoTo
+        }
+        else {
+            return .Ok
         }
     }
 
-    func halt(left:Den, _ right:Den) {
+    func halt(left:Den, _ right:Den) -> TriDenALUReturnType {
         assert(left == Den(0) && right == Den(0), "Malformed halt message")
-        delegate.didHalt()
+        return .Halt
     }
     
-    func set(valueAtRegister regIdx:Den, withValue value:Den) {
+    func set(valueAtRegister regIdx:Den, withValue value:Den) -> TriDenALUReturnType {
         registers[regIdx] = TriDen(value)
+        return .Ok
     }
 
-    func sumAndSet(valueAtRegister regIdx:Den, withValue value:Den) {
+    func sumAndSet(valueAtRegister regIdx:Den, withValue value:Den) -> TriDenALUReturnType {
         registers[regIdx] = registers[regIdx] + TriDen(value)
+        return .Ok
     }
     
-    func multiplyAndSet(valueAtRegister regIdx:Den, withValue value:Den) {
+    func multiplyAndSet(valueAtRegister regIdx:Den, withValue value:Den) -> TriDenALUReturnType {
         registers[regIdx] = registers[regIdx] * TriDen(value)
+        return .Ok
     }
 
-    func set(valueAtDestinationRegister destRegIdx:Den, withValueAtSourceRegister srcRegIdx:Den) {
+    func set(valueAtDestinationRegister destRegIdx:Den, withValueAtSourceRegister srcRegIdx:Den) -> TriDenALUReturnType {
         registers[destRegIdx] = registers[srcRegIdx]
+        return .Ok
     }
     
-    func sumAndSet(valueAtDestinationRegister destRegIdx:Den, withValueAtSourceRegister srcRegIdx:Den) {
+    func sumAndSet(valueAtDestinationRegister destRegIdx:Den, withValueAtSourceRegister srcRegIdx:Den) -> TriDenALUReturnType {
         registers[destRegIdx] = registers[destRegIdx] + registers[srcRegIdx]
+        return .Ok
     }
     
-    func multiplyAndSet(valueAtDestinationRegister destRegIdx:Den, withValueAtSourceRegister srcRegIdx:Den) {
+    func multiplyAndSet(valueAtDestinationRegister destRegIdx:Den, withValueAtSourceRegister srcRegIdx:Den) -> TriDenALUReturnType {
         registers[destRegIdx] = registers[destRegIdx] * registers[srcRegIdx]
+        return .Ok
     }
     
-    func set(valueAtDestinationRegister destRegIdx:Den, withValueInRAMWithAddressAtRegister srcRAMAddressRegIdx:Den) {
+    func set(valueAtDestinationRegister destRegIdx:Den, withValueInRAMWithAddressAtRegister srcRAMAddressRegIdx:Den) -> TriDenALUReturnType {
         registers[destRegIdx] = delegate.getValueFromRAMAtAddress(registers[srcRAMAddressRegIdx])
+        return .Ok
     }
     
-    func write(valueAtSourceRegister srcRegIdx:Den, toValueInRAMWithAddressAtRegister destRAMAddressRegIdx:Den) {
+    func write(valueAtSourceRegister srcRegIdx:Den, toValueInRAMWithAddressAtRegister destRAMAddressRegIdx:Den) -> TriDenALUReturnType {
         delegate.writeValue(registers[srcRegIdx], toRAMAtAddress: registers[destRAMAddressRegIdx])
+        return .Ok
     }
     
     
