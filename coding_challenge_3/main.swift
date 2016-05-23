@@ -8,7 +8,6 @@
 
 import Foundation
 
-
 var ram:[TriDen] = Array(count: TriDenALUController.ramSize, repeatedValue: TriDen(0))
 
 var idx = 0
